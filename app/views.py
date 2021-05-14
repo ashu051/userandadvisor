@@ -4,9 +4,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes,authentication_classes
-from .serializers import   BookSerializer,FavouriteSerializer,RegistrationSerializers
+from .serializers import   AdvisorSerializer,MainSerializer,RegistrationSerializers
 from rest_framework.response import Response
-from .models import Book,Favourite
+from .models import Advisor,Main
 from rest_framework.authentication import TokenAuthentication,BasicAuthentication
 from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly,AllowAny
 #---------------------------------------------------------token based auth --------------------------------------------#######
@@ -49,33 +49,53 @@ def logout(request):
 
 #-------------------------------------------------------token based auth end------------------------------------------######
 
-#-------------------------------------------------------api view for book start---------------------------------------#######
 
 
 @api_view(['GET','POST','PATCH','DELETE','PUT'])
-@authentication_classes([BasicAuthentication,TokenAuthentication])
-@permission_classes([IsAuthenticated,IsAuthenticatedOrReadOnly])
-def book_api(request,pk=None):
+@authentication_classes([TokenAuthentication,BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def book_api(request):
     if request.method == "GET":
-        print('--------------------------------------------------------------------')
-        print(request.user.is_superuser)
-        id = pk
-        if id is not None:
-            stu = Book.objects.get(id=id)
-            print('00000000000000000000000000000000000000000000000000000000000000000000000000000000000')
-            print(stu)
-            serializer  = BookSerializer(stu)
-            return Response(serializer.data)
-        else:
-            stu=Book.objects.all()
-            serializer  = BookSerializer(stu,many=True)
+        stu=Main.objects.all()
+        print((stu))
+        serializer  = MainSerializer(stu,many=True)
+        msg={'msg':" apka favourite abhi koi  nhi hai phle kuch add kro phir dekho"}
+        print(serializer.data)
+        return Response(serializer.data)
+        # return Response(serializer.data)
+
+@api_view(['GET','POST'])
+@authentication_classes([TokenAuthentication,BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def fav_api(request):
+    if request.method == "GET":
+            stu=Advisor.objects.all()
+            print((stu))
+            serializer  = AdvisorSerializer(stu,many=True)
+            msg={'msg':" apka favourite abhi koi  nhi hai phle kuch add kro phir dekho"}
+            print(serializer.data)
             return Response(serializer.data)
 
 
     if request.method == "POST":
-        print(request.data)
-        if request.user.is_superuser:
-            serializer = BookSerializer(data=request.data)
+        # print(request.data)
+
+        # print(request.user)
+        # print(request.user.id)
+        stu=Main.objects.get(user_id=request.user)
+        myd = stu
+        # print(type(myd))
+        # print(stu)
+        # print(type(stu))
+        iscorrectuser = request.data['khiladi'] 
+        # print(type(iscorrectuser))
+        # if str(myd.id) == iscorrectuser:
+        #     print("yes")
+        # print(type(str(myd.id)))
+
+        # print("-------------------------------------------------")
+        if iscorrectuser == str(myd.id):
+            serializer = AdvisorSerializer(data=request.data)
             print(serializer)
             if serializer.is_valid(): 
                 serializer.save()
@@ -84,153 +104,11 @@ def book_api(request,pk=None):
             else:
                 return Response(serializer.errors)
         else:
-            msg= {'msg':'Tum Super User nhi ho keval dekho post na kro '}
-            return Response(msg)
-
-        
-    if request.method == "PATCH":
-        id  = pk
-        stu = Book.objects.get(pk=id)
-        date ={}
-        print(request.data)
-        if request.user.is_superuser:
-            serializer = BookSerializer(stu,data=request.data,partial=True)
-            print(serializer)
-            print(stu)
-            if request.data == date:
-                msg= {'msg':'enter data to update'}
-                return Response(msg)
-            else:
-                print("here")
-                if serializer.is_valid():
-                    serializer.save()
-                    msg= {'msg':'data is updated check in database'}
-                    return Response(msg)
-                else:
-                    return Response(serializer.errors)
-        else:
-            msg= {'msg':'Tum Super User nhi ho keval dekho update na karo '}
-            return Response(msg)
-            
-    if request.method == "PUT":
-        id  = pk
-        stu = Book.objects.get(pk=id)
-        date ={}
-        print(request.data)
-        if request.user.is_superuser:
-            serializer = BookSerializer(stu,data=request.data,partial=False)
-            print(serializer)
-            print(stu)
-            if request.data == date:
-                msg= {'msg':'enter data to update'}
-                return Response(msg)
-            else:
-                print("here")
-                if serializer.is_valid():
-                    serializer.save()
-                    msg= {'msg':'data is updated check in database'}
-                    return Response(msg)
-                else:
-                    return Response(serializer.errors)
-        else:
-            msg= {'msg':'Tum Super User nhi ho keval dekho update na karo '}
-            return Response(msg)
-
-
-    if request.method == "DELETE":
-        id  = pk
-        if request.user.is_superuser:
-            stu = Book.objects.get(pk=id)
-            stu.delete()        
-            msg= {'msg':'data is deleted check in database'}
-            return Response(msg)
-        else:
-            msg= {'msg':'Tum Super User nhi ho keval dekho delete na karo '}
-            return Response(msg)
-#-------------------------------------------------------api view for book end---------------------------------------#######
-
-
-#-------------------------------------------------------api view for favourite end---------------------------------------#######
-
-@api_view(['GET','POST','DELETE'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def fav_api(request,pk=None):
-    if request.method == "GET":
-        print(request.user)
-        id = pk
-        if id is not None:
-            stu = Favourite.objects.get(id=pk)
-            stu2=Favourite.objects.filter(user=request.user)
-            countforsry=0
-            for s in stu2:
-                if s.id == stu.id :
-                    countforsry=1
-                    break
-            serializer  = FavouriteSerializer(stu)
-            print("77777777777777777777777777777777777777777777777777777777777777777777777777777777777777")
-            print(stu)
-            if countforsry == 0:
-                msg={'msg':" apka favourite abhi koi  nhi hai phle kuch add kro phir dekho"}
-                return Response(msg)
-            return Response(serializer.data)
-        else:
-            print(request.user)
-            stu=Favourite.objects.filter(user=request.user)
-            for s in stu:
-                print(s.id)
-            serializer  = FavouriteSerializer(stu,many=True)
-            if stu == None:
-                msg={'msg':" apka favourite abhi nhi hai kuch phle add kro phir dekho"}
-                return Response(msg)
-            return Response(serializer.data)    
-    if request.method == "POST":
-        print('---------------------------------------------------------------------------')
-        print(request.data)
-        # request.data['book'] = int(request.data['book'])
-        # request.data['user'] = int(request.data['user'])
-        # print(type(request.data['user']))
-        print(type(request.user.id))
-        # request.data['user'] = int(request.data['user'])
-        iscorrectuser = request.data['user'] 
-        if iscorrectuser == str(request.user.id):
-            serializer = FavouriteSerializer(data=request.data)
-            print(serializer)
-            if serializer.is_valid():
-                serializer.save()
-                msg= {'msg':'serializer run '}
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors)
-        else:
             msg= {'msg':'Not permitted '}
             return Response(msg)
 
         
-        
-    if request.method == "DELETE":
-        id = pk
-        # request.data._mutable = True
-        # request.data['book'] = int(request.data['book'])
-        # request.data['user'] = int(request.data['user'])
-        del_book = Favourite.objects.filter(id=id).exists()
-        if del_book == True:
-            print('---------------------------------------------------------------------------')
-            
-            del_book = Favourite.objects.get(id=id)
-            if request.user == del_book.user:
-                del_book.delete()
-                msg= {'msg':'delete ho gaya hai database main check kr lo vro '}
-                return Response(msg)
-                print(del_book)
-            else:
-                msg= {'msg':' phle permission leke aao '}
-                return Response(msg)
 
-        else:
-            msg= {'msg':' ye image favourite main nhi store hai '}
-            return Response(msg)
 
-#-------------------------------------------------------api view for favourites end---------------------------------------#######
 
         

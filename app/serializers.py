@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Book,Favourite
+from .models import Advisor, Main
 
 class RegistrationSerializers(serializers.ModelSerializer):
     class Meta:
@@ -17,23 +17,16 @@ class RegistrationSerializers(serializers.ModelSerializer):
         user.save()
         return user
 
-class BookSerializer(serializers.ModelSerializer):
+
+class AdvisorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Book
-        fields=['id','title','description','book_image']
-class FavouriteSerializer(serializers.ModelSerializer):
-    # kitab = serializers.StringRelatedField(many=True)
-    # aadmi = serializers.StringRelatedField(many=True)
-    # def _user(self, obj):
-    #     request = self.context.get('request', None)
-    #     if request:
-    #         return request.user
-    # current_user = serializers.SerializerMethodField('_user')
-    # print(current_user)
-
-    # # Use this method for the custom field
-
+        model = Advisor
+        fields=['khiladi','advisor_image','advisor_name','booking_time']
+class MainSerializer(serializers.ModelSerializer):
+    aadmi = AdvisorSerializer(many=True)
 
     class Meta:
-        model = Favourite
-        fields=['id','book','user']
+        model = Main
+        fields = ['user','aadmi']
+
+        
